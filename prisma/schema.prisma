@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Flower {
+  id          String   @id @default(cuid())
+  name        String
+  price       Int
+  imageUrl    String
+  description String?
+  stock       Int      @default(0)
+  category    String?
+  color       String?
+  gameItemId  String?
+  rarity      String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owners FlowerOwner[]
+
+  @@index([name])
+  @@index([category])
+  @@index([createdAt])
+  @@index([isActive, sortOrder])
+}
+
+model Member {
+  id          String   @id @default(cuid())
+  displayName String
+  gameHandle  String?
+  avatarUrl   String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  flowers FlowerOwner[]
+
+  @@index([displayName])
+}
+
+model FlowerOwner {
+  id        String   @id @default(cuid())
+  flowerId  String
+  memberId  String
+  ownedAt   DateTime @default(now())
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  flower Flower @relation(fields: [flowerId], references: [id], onDelete: Cascade)
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([flowerId, memberId])
+  @@index([memberId])
+}
