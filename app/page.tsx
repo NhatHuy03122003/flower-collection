@@ -11,7 +11,9 @@ export default function Home() {
   return (
     <div className="flex min-h-screen flex-col bg-[#f6d8e1] font-sans text-slate-800">
       <CollectionHeader />
-      <CollectionToolbar />
+      <Suspense fallback={null}>
+        <CollectionToolbar />
+      </Suspense>
 
       <main className="mx-auto w-full max-w-screen-2xl flex-1 px-3 py-4 sm:px-5 sm:py-5">
         <Suspense fallback={<CollectionLoading />}>
