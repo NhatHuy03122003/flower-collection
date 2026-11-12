@@ -3,12 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  // Runtime dùng connection pooler của Supabase (port 6543) để không cạn
-  // connection khi chạy serverless trên Vercel.
-  url       = env("DATABASE_URL")
-  // Migrate/introspect dùng kết nối trực tiếp (port 5432), không qua pooler.
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model Flower {
