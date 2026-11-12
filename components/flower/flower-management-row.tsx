@@ -1,10 +1,11 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import type { Flower } from "@/lib/flower";
+import { getDisplayImageUrl, type Flower } from "@/lib/flower";
 import type { FlowerOwnerListItem } from "@/lib/flower-owner";
 import type { Member } from "@/lib/member";
 
 import { DeactivateFlowerButton } from "./deactivate-flower-button";
+import { EditFlowerDialog } from "./edit-flower-dialog";
 import { FlowerOwnerList } from "./flower-owner-list";
 import { FlowerOwnerSelect } from "./flower-owner-select";
 
@@ -23,9 +24,10 @@ export function FlowerManagementRow({
         <div className="aspect-[4/3] overflow-hidden bg-muted">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={flower.imageUrl}
+            src={getDisplayImageUrl(flower.imageUrl)}
             alt={flower.name}
             loading="lazy"
+            referrerPolicy="no-referrer"
             className="size-full object-cover"
           />
         </div>
@@ -53,9 +55,15 @@ export function FlowerManagementRow({
                 variant="secondary"
                 className="rounded-md px-2 text-xs font-medium"
               >
-                {flower.category?.trim() || "Chưa phân loại"}
+                {flower.color?.trim() || "Chưa phân loại"}
               </Badge>
-              <DeactivateFlowerButton flowerId={flower.id} name={flower.name} />
+              <div className="flex items-center gap-1">
+                <EditFlowerDialog flower={flower} />
+                <DeactivateFlowerButton
+                  flowerId={flower.id}
+                  name={flower.name}
+                />
+              </div>
             </div>
           </div>
         </CardContent>

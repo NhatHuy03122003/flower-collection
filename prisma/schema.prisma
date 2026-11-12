@@ -45,6 +45,16 @@ model Member {
   @@index([displayName])
 }
 
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  displayName  String
+  createdAt    DateTime @default(now())
+
+  @@index([username])
+}
+
 model FlowerOwner {
   id        String   @id @default(cuid())
   flowerId  String

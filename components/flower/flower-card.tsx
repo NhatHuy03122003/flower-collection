@@ -1,7 +1,7 @@
 import { cn } from "cn";
 
 import type { FlowerOwnerListItem } from "@/lib/flower-owner";
-import type { getFlowers } from "@/lib/flower";
+import { getDisplayImageUrl, type getFlowers } from "@/lib/flower";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -46,9 +46,10 @@ export function FlowerCard({
       <div className="aspect-[4/3] overflow-hidden bg-muted">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={flower.imageUrl}
+          src={getDisplayImageUrl(flower.imageUrl)}
           alt={flower.name}
           loading="lazy"
+          referrerPolicy="no-referrer"
           className="size-full object-cover"
         />
       </div>
@@ -71,7 +72,7 @@ export function FlowerCard({
               getColorBadgeColor(flower.color),
             )}
           >
-            {flower.category?.trim() || "Chưa phân loại"}
+            {flower.color?.trim() || "Chưa phân loại"}
           </Badge>
 
           <FlowerOwnerToggle

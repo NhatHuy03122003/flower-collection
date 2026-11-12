@@ -1,9 +1,12 @@
 import { Suspense } from "react";
 
-import { FlowerSection } from "@/components/flower/flower-section";
+import { FlowerCard } from "@/components/flower/flower-card";
+import { FlowerCollectionList } from "@/components/flower/flower-collection-list";
 import { CollectionHeader } from "@/components/navigation/collection-header";
 import { CollectionToolbar } from "@/components/navigation/collection-toolbar";
+import { SearchInput, SearchProvider } from "@/components/shared/search";
 import { EmptyState } from "@/components/shared/empty-state";
+import { FlowerCardSkeletonGrid } from "@/components/shared/skeleton";
 import { getCurrentMember } from "@/lib/current-member";
 import { getFlowerCollection, groupCollectionByColor } from "@/lib/flower-owner";
 
@@ -16,9 +19,11 @@ export default function Home() {
       </Suspense>
 
       <main className="mx-auto w-full max-w-screen-2xl flex-1 px-3 py-4 sm:px-5 sm:py-5">
-        <Suspense fallback={<CollectionLoading />}>
-          <FlowerCollection />
-        </Suspense>
+        <SearchProvider>
+          <Suspense fallback={<CollectionLoading />}>
+            <FlowerCollection />
+          </Suspense>
+        </SearchProvider>
       </main>
     </div>
   );
@@ -37,34 +42,34 @@ async function FlowerCollection() {
 
   return (
     <div className="space-y-5 sm:space-y-6">
-      {sections.map(([color, colorItems]) => (
-        <FlowerSection
-          key={color}
-          color={color}
-          items={colorItems}
-          hasCurrentMember={hasCurrentMember}
-        />
-      ))}
+      <SearchInput placeholder="Tìm theo tên hoa..." />
+
+      <FlowerCollectionList
+        sections={sections.map(([color, colorItems]) => ({
+          color,
+          items: colorItems.map((item) => ({
+            id: item.flower.id,
+            searchText: [
+              item.flower.name,
+              item.flower.color,
+              item.flower.description,
+            ],
+            content: (
+              <FlowerCard
+                flower={item.flower}
+                ownerCount={item.ownerCount}
+                owners={item.owners}
+                isOwnedByCurrentMember={item.isOwnedByCurrentMember}
+                hasCurrentMember={hasCurrentMember}
+              />
+            ),
+          })),
+        }))}
+      />
     </div>
   );
 }
 
 function CollectionLoading() {
-  return (
-    <div className="grid grid-cols-2 gap-3 min-[520px]:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
-      {Array.from({ length: 10 }, (_, index) => (
-        <div
-          key={index}
-          className="overflow-hidden rounded-lg border border-border bg-white shadow-sm"
-        >
-          <div className="aspect-[4/3] animate-pulse bg-rose-100" />
-          <div className="space-y-3 p-4">
-            <div className="h-3.5 w-3/4 animate-pulse rounded bg-rose-100" />
-            <div className="h-3 w-2/3 animate-pulse rounded bg-rose-50" />
-            <div className="h-5 w-24 animate-pulse rounded-md bg-rose-50" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  return <FlowerCardSkeletonGrid count={6} />;
 }

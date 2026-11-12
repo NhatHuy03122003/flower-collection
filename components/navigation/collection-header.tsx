@@ -1,7 +1,9 @@
 import { Suspense } from "react";
 
+import { AuthLinks, UserMenu } from "@/components/auth/user-menu";
 import { MemberSelector } from "@/components/member/member-selector";
 import { getCurrentMember } from "@/lib/current-member";
+import { getCurrentUser } from "@/lib/current-user";
 import { getMembers } from "@/lib/member";
 
 export function CollectionHeader() {
@@ -15,12 +17,23 @@ export function CollectionHeader() {
           Hội ROSE Flower Collection
         </h1>
 
-        <Suspense fallback={<MemberSelectorSkeleton />}>
-          <HeaderMemberSelector />
-        </Suspense>
+        <div className="flex items-center gap-2">
+          <Suspense fallback={<MemberSelectorSkeleton />}>
+            <HeaderMemberSelector />
+          </Suspense>
+          <Suspense fallback={null}>
+            <HeaderUserArea />
+          </Suspense>
+        </div>
       </div>
     </header>
   );
+}
+
+async function HeaderUserArea() {
+  const user = await getCurrentUser();
+
+  return user ? <UserMenu user={user} /> : <AuthLinks />;
 }
 
 async function HeaderMemberSelector() {

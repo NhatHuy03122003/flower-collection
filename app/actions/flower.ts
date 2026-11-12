@@ -9,6 +9,8 @@ import {
   getActiveFlowerNames,
   getFlowerById,
   isFlowerNameTaken,
+  restoreFlower,
+  updateFlower,
   validateFlowerInput,
 } from "@/lib/flower";
 import type { FlowerActionState } from "@/lib/flower";
@@ -73,6 +75,76 @@ export async function deactivateFlowerAction(
   }
 
   await deactivateFlower(id);
+  revalidateFlowerPaths();
+
+  return { status: "success" };
+}
+
+export async function restoreFlowerAction(
+  _prevState: FlowerActionState,
+  formData: FormData,
+): Promise<FlowerActionState> {
+  const id = formData.get("id");
+
+  if (typeof id !== "string" || !id.trim()) {
+    return {
+      status: "error",
+      errors: { form: "Không xác định được hoa cần khôi phục." },
+    };
+  }
+
+  const flower = await getFlowerById(id);
+
+  if (!flower) {
+    return {
+      status: "error",
+      errors: { form: "Không tìm thấy hoa." },
+    };
+  }
+
+  await restoreFlower(id);
+  revalidateFlowerPaths();
+
+  return { status: "success" };
+}
+
+export async function updateFlowerAction(
+  _prevState: FlowerActionState,
+  formData: FormData,
+): Promise<FlowerActionState> {
+  const id = formData.get("id");
+
+  if (typeof id !== "string" || !id.trim()) {
+    return {
+      status: "error",
+      errors: { form: "Không xác định được hoa cần sửa." },
+    };
+  }
+
+  const { data, errors } = validateFlowerInput(formData);
+
+  if (!data) {
+    return { status: "error", errors };
+  }
+
+  const flower = await getFlowerById(id);
+
+  if (!flower) {
+    return {
+      status: "error",
+      errors: { form: "Không tìm thấy hoa." },
+    };
+  }
+
+  // Bỏ qua chính hoa đang sửa để cho phép giữ nguyên tên hiện tại.
+  if (await isFlowerNameTaken(data.name, id)) {
+    return {
+      status: "error",
+      errors: { name: "Tên hoa này đã tồn tại." },
+    };
+  }
+
+  await updateFlower(id, data);
   revalidateFlowerPaths();
 
   return { status: "success" };

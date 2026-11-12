@@ -107,8 +107,9 @@ export function validateFlowerInput(
 /**
  * Kiểm tra trùng tên hoa theo trim + lowercase.
  * Chỉ so với các hoa đang hiển thị (isActive = true).
+ * excludeId: bỏ qua chính hoa đang sửa để cho phép giữ nguyên tên hiện tại.
  */
-export async function isFlowerNameTaken(name: string) {
+export async function isFlowerNameTaken(name: string, excludeId?: string) {
   const normalized = name.trim();
 
   if (!normalized) {
@@ -122,6 +123,7 @@ export async function isFlowerNameTaken(name: string) {
         equals: normalized,
         mode: "insensitive",
       },
+      ...(excludeId ? { id: { not: excludeId } } : {}),
     },
     select: { id: true },
   });
@@ -144,6 +146,22 @@ export async function createFlower(data: FlowerInput) {
       description: data.description,
       // price là cột bắt buộc trong schema nhưng chưa dùng ở luồng quản lý hoa.
       price: 0,
+    },
+  });
+}
+
+/**
+ * Cập nhật thông tin hoa. Chỉ đụng tới các field cho phép sửa.
+ * Không thay đổi id, isActive, owners, createdAt.
+ */
+export async function updateFlower(id: string, data: FlowerInput) {
+  return prisma.flower.update({
+    where: { id },
+    data: {
+      name: data.name,
+      imageUrl: data.imageUrl,
+      color: data.color,
+      description: data.description,
     },
   });
 }
@@ -189,4 +207,55 @@ export async function deactivateFlower(id: string) {
     where: { id },
     data: { isActive: false },
   });
+}
+
+/**
+ * Lấy các hoa đã ẩn (isActive = false) để phục vụ khôi phục.
+ */
+export async function getArchivedFlowers() {
+  return prisma.flower.findMany({
+    where: { isActive: false },
+    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+  });
+}
+
+/**
+ * Khôi phục hoa đã ẩn: chỉ set isActive = true.
+ * Không tạo bản ghi mới, không đụng tới FlowerOwner hay createdAt.
+ */
+export async function restoreFlower(id: string) {
+  return prisma.flower.update({
+    where: { id },
+    data: { isActive: true },
+  });
+}
+
+// Google Drive không phục vụ ảnh trực tiếp cho <img> qua link share, và link
+// dạng lh3.googleusercontent.com/d/<id> bị Google giới hạn tần suất nên ảnh
+// hay vỡ. Chuẩn hoá mọi link Drive về endpoint thumbnail chính thức.
+const GOOGLE_DRIVE_FILE_ID_PATTERNS: RegExp[] = [
+  /drive\.google\.com\/file\/d\/([^/?#]+)/,
+  /drive\.google\.com\/open\?[^#]*\bid=([^&?#]+)/,
+  /drive\.google\.com\/uc\?[^#]*\bid=([^&?#]+)/,
+  /drive\.google\.com\/thumbnail\?[^#]*\bid=([^&?#]+)/,
+  /googleusercontent\.com\/d\/([^/?#=]+)/,
+];
+
+/**
+ * Trả về URL ảnh hiển thị được trong <img>.
+ * Link Google Drive (file/d, open?id, uc?id, thumbnail, lh3 /d/) được chuyển
+ * về direct image URL. URL khác giữ nguyên. Không đổi cột imageUrl trong DB.
+ */
+export function getDisplayImageUrl(imageUrl: string): string {
+  const url = imageUrl.trim();
+
+  for (const pattern of GOOGLE_DRIVE_FILE_ID_PATTERNS) {
+    const match = url.match(pattern);
+
+    if (match?.[1]) {
+      return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w2000`;
+    }
+  }
+
+  return url;
 }

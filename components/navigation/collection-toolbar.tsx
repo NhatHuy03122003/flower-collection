@@ -2,14 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Check, Flower, Flower2, UserMinus, Users } from "lucide-react";
+import { Check, Flower, Flower2, Users } from "lucide-react";
 
 const toolbarItems = [
   { label: "Danh sách hoa", icon: Flower2, href: "/" },
   { label: "Tick hoa của tôi", icon: Check, href: "/my-flowers" },
   { label: "Quản lý hoa", icon: Flower, href: "/flowers" },
   { label: "Thành viên", icon: Users, href: "/members" },
-  { label: "Xóa thành viên", icon: UserMinus, href: null },
 ] as const;
 
 const activeClassName =
@@ -28,30 +27,19 @@ export function CollectionToolbar() {
       <div className="mx-auto w-full max-w-screen-2xl overflow-x-auto px-3 py-2.5 sm:px-5">
         <ul className="flex w-max items-center gap-2">
           {toolbarItems.map(({ label, icon: Icon, href }) => {
-            const active = href !== null && pathname === href;
+            const active = pathname === href;
             const className = active ? activeClassName : inactiveClassName;
 
             return (
               <li key={label}>
-                {href ? (
-                  <Link
-                    href={href}
-                    aria-current={active ? "page" : undefined}
-                    className={className}
-                  >
-                    <Icon aria-hidden="true" className="size-3.5" />
-                    {label}
-                  </Link>
-                ) : (
-                  <button
-                    type="button"
-                    aria-disabled={true}
-                    className={className}
-                  >
-                    <Icon aria-hidden="true" className="size-3.5" />
-                    {label}
-                  </button>
-                )}
+                <Link
+                  href={href}
+                  aria-current={active ? "page" : undefined}
+                  className={className}
+                >
+                  <Icon aria-hidden="true" className="size-3.5" />
+                  {label}
+                </Link>
               </li>
             );
           })}

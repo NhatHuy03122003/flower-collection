@@ -4,6 +4,7 @@ import { Flower2 } from "lucide-react";
 import { FlowerSection } from "@/components/flower/flower-section";
 import { CollectionHeader } from "@/components/navigation/collection-header";
 import { CollectionToolbar } from "@/components/navigation/collection-toolbar";
+import { FlowerCardSkeletonGrid } from "@/components/shared/skeleton";
 import { getCurrentMember } from "@/lib/current-member";
 import {
   getOwnedFlowerCollection,
@@ -89,21 +90,5 @@ async function MyFlowersContent() {
 }
 
 function MyFlowersLoading() {
-  return (
-    <div className="grid grid-cols-2 gap-3 min-[520px]:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
-      {Array.from({ length: 6 }, (_, index) => (
-        <div
-          key={index}
-          className="overflow-hidden rounded-lg border border-border bg-white shadow-sm"
-        >
-          <div className="aspect-[4/3] animate-pulse bg-rose-100" />
-          <div className="space-y-3 p-4">
-            <div className="h-3.5 w-3/4 animate-pulse rounded bg-rose-100" />
-            <div className="h-3 w-2/3 animate-pulse rounded bg-rose-50" />
-            <div className="h-5 w-24 animate-pulse rounded-md bg-rose-50" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  return <FlowerCardSkeletonGrid count={6} />;
 }

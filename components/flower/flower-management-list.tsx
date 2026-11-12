@@ -1,5 +1,6 @@
-import { Flower2 } from "lucide-react";
+import { Flower2, SearchX } from "lucide-react";
 
+import { SearchableList } from "@/components/shared/searchable-list";
 import type { Flower } from "@/lib/flower";
 import type { FlowerOwnerListItem } from "@/lib/flower-owner";
 import type { Member } from "@/lib/member";
@@ -30,15 +31,30 @@ export function FlowerManagementList({
   }
 
   return (
-    <ul className="grid grid-cols-2 gap-3 min-[520px]:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]">
-      {flowers.map((flower) => (
-        <FlowerManagementRow
-          key={flower.id}
-          flower={flower}
-          owners={ownersByFlower.get(flower.id) ?? []}
-          members={members}
-        />
-      ))}
-    </ul>
+    <SearchableList
+      listClassName="grid grid-cols-2 gap-3 min-[520px]:grid-cols-[repeat(auto-fill,minmax(220px,1fr))]"
+      emptyState={
+        <div className="mx-auto flex min-h-56 max-w-md flex-col items-center justify-center gap-2 px-5 py-12 text-center">
+          <SearchX aria-hidden="true" className="size-8 text-rose-400" />
+          <h2 className="text-base font-semibold text-rose-950">
+            Không tìm thấy hoa phù hợp
+          </h2>
+          <p className="text-sm text-rose-900/65">
+            Thử từ khoá khác hoặc xoá ô tìm kiếm để xem toàn bộ danh sách.
+          </p>
+        </div>
+      }
+      items={flowers.map((flower) => ({
+        id: flower.id,
+        searchText: [flower.name, flower.description],
+        content: (
+          <FlowerManagementRow
+            flower={flower}
+            owners={ownersByFlower.get(flower.id) ?? []}
+            members={members}
+          />
+        ),
+      }))}
+    />
   );
 }

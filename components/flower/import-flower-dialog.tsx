@@ -7,7 +7,7 @@ import {
   useState,
   useTransition,
 } from "react";
-import { Upload } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 
 import { importFlowersAction } from "@/app/actions/flower";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,7 @@ import type {
   FlowerImportRowStatus,
   FlowerImportPreview,
 } from "@/lib/flower-import";
+import { cn } from "@/lib/utils";
 
 const PREVIEW_ROW_LIMIT = 50;
 
@@ -45,6 +46,13 @@ const STATUS_META: Record<
   valid: { label: "Hợp lệ", variant: "default" },
   invalid: { label: "Lỗi", variant: "destructive" },
   duplicate: { label: "Trùng", variant: "outline" },
+};
+
+type ImportStatus = "idle" | "checking" | "importing";
+
+type ImportFeedback = {
+  tone: "success" | "warning";
+  message: string;
 };
 
 export function ImportFlowerDialog({
@@ -58,9 +66,12 @@ export function ImportFlowerDialog({
   const [format, setFormat] = useState<FlowerImportFormat | null>(null);
   const [preview, setPreview] = useState<FlowerImportPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<ImportFeedback | null>(null);
+  const [status, setStatus] = useState<ImportStatus>("idle");
   const [pending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const isBusy = status !== "idle";
 
   const clearFile = useCallback(() => {
     setFileName(null);
@@ -69,6 +80,7 @@ export function ImportFlowerDialog({
     setPreview(null);
     setError(null);
     setResult(null);
+    setStatus("idle");
 
     if (inputRef.current) {
       inputRef.current.value = "";
@@ -113,18 +125,24 @@ export function ImportFlowerDialog({
         return;
       }
 
-      const text = await file.text();
-      const parsed = parseFlowerImportContent(text, detected);
+      setStatus("checking");
 
-      if (parsed.error) {
-        setError(parsed.error);
-        return;
+      try {
+        const text = await file.text();
+        const parsed = parseFlowerImportContent(text, detected);
+
+        if (parsed.error) {
+          setError(parsed.error);
+          return;
+        }
+
+        setFileName(file.name);
+        setContent(text);
+        setFormat(detected);
+        setPreview(analyzeFlowerImportRows(parsed.rows ?? [], existingNames));
+      } finally {
+        setStatus("idle");
       }
-
-      setFileName(file.name);
-      setContent(text);
-      setFormat(detected);
-      setPreview(analyzeFlowerImportRows(parsed.rows ?? [], existingNames));
     },
     [existingNames],
   );
@@ -135,25 +153,35 @@ export function ImportFlowerDialog({
     }
 
     startTransition(async () => {
-      const response = await importFlowersAction(content, format);
+      setStatus("importing");
 
-      if (response.status === "success") {
-        setResult(
-          `Đã import ${response.imported} hoa, bỏ qua ${response.skipped} dòng.`,
-        );
-        setPreview(null);
-        setContent("");
-        setFormat(null);
-        setFileName(null);
+      try {
+        const response = await importFlowersAction(content, format);
 
-        if (inputRef.current) {
-          inputRef.current.value = "";
+        if (response.status === "success") {
+          setResult({
+            tone: response.skipped > 0 ? "warning" : "success",
+            message:
+              response.skipped > 0
+                ? `⚠️ Import hoàn tất với một số lỗi. Đã import ${response.imported} hoa, bỏ qua ${response.skipped} dòng.`
+                : `✅ Import thành công. Đã import ${response.imported} hoa.`,
+          });
+          setPreview(null);
+          setContent("");
+          setFormat(null);
+          setFileName(null);
+
+          if (inputRef.current) {
+            inputRef.current.value = "";
+          }
+
+          return;
         }
 
-        return;
+        setError(response.message);
+      } finally {
+        setStatus("idle");
       }
-
-      setError(response.message);
     });
   }, [content, format]);
 
@@ -178,17 +206,34 @@ export function ImportFlowerDialog({
           type="file"
           accept=".csv,.json,text/csv,application/json"
           onChange={handleFileChange}
+          disabled={isBusy}
           aria-label="Chọn file import"
           className={
             preview
               ? "sr-only"
-              : "block w-full text-xs text-slate-600 file:mr-2 file:cursor-pointer file:rounded-lg file:border-0 file:bg-rose-600 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white"
+              : "block w-full text-xs text-slate-600 file:mr-2 file:cursor-pointer file:rounded-lg file:border-0 file:bg-rose-600 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-white disabled:cursor-not-allowed disabled:opacity-60"
           }
         />
 
+        {isBusy ? (
+          <p className="flex items-center gap-2 rounded-lg bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
+            <Loader2 className="animate-spin" aria-hidden="true" />
+            {status === "checking"
+              ? "Đang kiểm tra dữ liệu..."
+              : "Đang import dữ liệu..."}
+          </p>
+        ) : null}
+
         {result ? (
-          <p className="rounded-lg bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800">
-            {result}
+          <p
+            className={cn(
+              "rounded-lg px-3 py-2 text-xs font-medium",
+              result.tone === "success"
+                ? "bg-emerald-50 text-emerald-800"
+                : "bg-amber-50 text-amber-800",
+            )}
+          >
+            {result.message}
           </p>
         ) : null}
 
@@ -208,19 +253,24 @@ export function ImportFlowerDialog({
               <Button
                 variant="outline"
                 type="button"
-                disabled={pending}
+                disabled={isBusy}
                 onClick={() => inputRef.current?.click()}
               >
                 Chọn file khác
               </Button>
               <Button
                 type="button"
-                disabled={pending || preview.importable.length === 0}
+                disabled={isBusy || preview.importable.length === 0}
                 onClick={handleImport}
               >
-                {pending
-                  ? "Đang import..."
-                  : `Import ${preview.importable.length} hoa`}
+                {pending ? (
+                  <>
+                    <Loader2 className="animate-spin" aria-hidden="true" />
+                    Đang import dữ liệu...
+                  </>
+                ) : (
+                  `Import ${preview.importable.length} hoa`
+                )}
               </Button>
             </>
           ) : (

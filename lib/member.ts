@@ -102,8 +102,12 @@ export function validateMemberInput(
 /**
  * Kiểm tra trùng tên hiển thị theo trim + lowercase.
  * Chỉ so với các thành viên đang hiển thị (isActive = true).
+ * excludeId: bỏ qua chính thành viên đang sửa để cho phép giữ nguyên tên hiện tại.
  */
-export async function isDisplayNameTaken(displayName: string) {
+export async function isDisplayNameTaken(
+  displayName: string,
+  excludeId?: string,
+) {
   const normalized = displayName.trim();
 
   if (!normalized) {
@@ -117,6 +121,7 @@ export async function isDisplayNameTaken(displayName: string) {
         equals: normalized,
         mode: "insensitive",
       },
+      ...(excludeId ? { id: { not: excludeId } } : {}),
     },
     select: { id: true },
   });
@@ -133,6 +138,22 @@ export async function getMemberById(id: string) {
 export async function createMember(data: MemberInput) {
   return prisma.member.create({
     data,
+  });
+}
+
+/**
+ * Cập nhật thông tin thành viên. Chỉ đụng tới các field cho phép sửa
+ * (displayName, gameHandle, avatarUrl). Không thay đổi id, isActive, createdAt.
+ * updatedAt do schema @updatedAt tự quản lý, không set thủ công.
+ */
+export async function updateMember(id: string, data: MemberInput) {
+  return prisma.member.update({
+    where: { id },
+    data: {
+      displayName: data.displayName,
+      gameHandle: data.gameHandle,
+      avatarUrl: data.avatarUrl,
+    },
   });
 }
 

@@ -4,6 +4,8 @@ import { AddMemberDialog } from "@/components/member/add-member-dialog";
 import { MemberList } from "@/components/member/member-list";
 import { CollectionHeader } from "@/components/navigation/collection-header";
 import { CollectionToolbar } from "@/components/navigation/collection-toolbar";
+import { SearchInput, SearchProvider } from "@/components/shared/search";
+import { MemberCardSkeletonGrid } from "@/components/shared/skeleton";
 import { getMemberOwnershipSummaries } from "@/lib/flower-owner";
 import { getMembers } from "@/lib/member";
 
@@ -20,16 +22,21 @@ export default function MembersPage() {
       </Suspense>
 
       <main className="mx-auto w-full max-w-screen-2xl flex-1 px-3 py-4 sm:px-5 sm:py-5">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-base font-bold tracking-tight text-rose-950 sm:text-lg">
-            Thành viên
-          </h2>
-          <AddMemberDialog />
-        </div>
+        <SearchProvider>
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-base font-bold tracking-tight text-rose-950 sm:text-lg">
+              Thành viên
+            </h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <SearchInput placeholder="Tìm thành viên..." />
+              <AddMemberDialog />
+            </div>
+          </div>
 
-        <Suspense fallback={<MembersLoading />}>
-          <MembersContent />
-        </Suspense>
+          <Suspense fallback={<MembersLoading />}>
+            <MembersContent />
+          </Suspense>
+        </SearchProvider>
       </main>
     </div>
   );
@@ -52,23 +59,5 @@ async function MembersContent() {
 }
 
 function MembersLoading() {
-  return (
-    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {Array.from({ length: 6 }, (_, index) => (
-        <div
-          key={index}
-          className="flex flex-col items-center gap-3 rounded-xl border border-rose-200/70 bg-card p-4 shadow-sm"
-        >
-          <div className="size-20 animate-pulse rounded-full bg-rose-100" />
-          <div className="h-5 w-32 animate-pulse rounded bg-rose-100" />
-          <div className="h-3 w-20 animate-pulse rounded bg-rose-50" />
-          <div className="h-14 w-full animate-pulse rounded-lg bg-rose-50" />
-          <div className="flex w-full gap-2">
-            <div className="h-7 flex-1 animate-pulse rounded-lg bg-rose-100" />
-            <div className="h-7 flex-1 animate-pulse rounded-lg bg-rose-100" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  return <MemberCardSkeletonGrid count={6} />;
 }

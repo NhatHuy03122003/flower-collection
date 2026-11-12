@@ -5,6 +5,7 @@ import type { MemberOwnershipSummary } from "@/lib/flower-owner";
 import type { Member } from "@/lib/member";
 
 import { DeactivateMemberButton } from "./deactivate-member-button";
+import { EditMemberDialog } from "./edit-member-dialog";
 
 export function MemberRow({
   member,
@@ -61,20 +62,21 @@ export function MemberRow({
         </dl>
       </div>
 
-      <div className="flex items-center gap-2 border-t border-rose-100 p-3">
+      <div className="grid grid-cols-3 gap-2 border-t border-rose-100 p-3">
         <Button
           render={<Link href={`/members/${member.id}`} />}
           nativeButton={false}
           variant="outline"
           size="sm"
-          className="flex-1"
+          className="w-full"
         >
           Chi tiết
         </Button>
+        <EditMemberDialog member={member} className="w-full" />
         <DeactivateMemberButton
           memberId={member.id}
           displayName={member.displayName}
-          className="flex-1"
+          className="w-full"
         />
       </div>
     </li>
