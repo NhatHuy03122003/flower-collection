@@ -1,16 +1,19 @@
+import { cache } from "react";
+
 import { prisma } from "./prisma";
 
 // Member là dữ liệu nội bộ:
 // - Soft delete bằng isActive = false (không bao giờ xoá cứng)
 // - Thành viên đã ẩn không hiển thị ở danh sách
-export async function getMembers() {
-  return prisma.member.findMany({
+// Bọc cache() để header và nội dung trang không query trùng trong cùng request.
+export const getMembers = cache(async () =>
+  prisma.member.findMany({
     where: { isActive: true },
     orderBy: {
       displayName: "asc",
     },
-  });
-}
+  }),
+);
 
 export type Member = Awaited<ReturnType<typeof getMembers>>[number];
 
@@ -129,11 +132,11 @@ export async function isDisplayNameTaken(
   return existing !== null;
 }
 
-export async function getMemberById(id: string) {
-  return prisma.member.findUnique({
+export const getMemberById = cache(async (id: string) =>
+  prisma.member.findUnique({
     where: { id },
-  });
-}
+  }),
+);
 
 export async function createMember(data: MemberInput) {
   return prisma.member.create({

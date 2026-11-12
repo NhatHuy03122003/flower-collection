@@ -1,14 +1,17 @@
+import { cache } from "react";
+
 import { prisma } from "./prisma";
 
 // Flower là dữ liệu nội bộ:
 // - Soft delete bằng isActive = false (không bao giờ xoá cứng)
 // - Hoa đã ẩn không hiển thị ở danh sách
-export async function getFlowers() {
-  return prisma.flower.findMany({
+// Bọc cache() để nhiều component trong cùng request dùng lại một kết quả.
+export const getFlowers = cache(async () =>
+  prisma.flower.findMany({
     where: { isActive: true },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
-  });
-}
+  }),
+);
 
 export type Flower = Awaited<ReturnType<typeof getFlowers>>[number];
 
@@ -212,12 +215,12 @@ export async function deactivateFlower(id: string) {
 /**
  * Lấy các hoa đã ẩn (isActive = false) để phục vụ khôi phục.
  */
-export async function getArchivedFlowers() {
-  return prisma.flower.findMany({
+export const getArchivedFlowers = cache(async () =>
+  prisma.flower.findMany({
     where: { isActive: false },
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
-  });
-}
+  }),
+);
 
 /**
  * Khôi phục hoa đã ẩn: chỉ set isActive = true.

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { cookies } from "next/headers";
 
 import { getMemberById } from "./member";
@@ -24,8 +25,9 @@ async function readCurrentMemberId(): Promise<string | null> {
 /**
  * Trả về thành viên hiện tại nếu cookie trỏ tới một thành viên còn hoạt động.
  * Cookie trỏ tới thành viên đã ẩn/không tồn tại được coi như chưa chọn.
+ * Bọc cache() để header và nội dung trang không query trùng trong cùng request.
  */
-export async function getCurrentMember(): Promise<Member | null> {
+export const getCurrentMember = cache(async (): Promise<Member | null> => {
   const memberId = await readCurrentMemberId();
 
   if (!memberId) {
@@ -39,7 +41,7 @@ export async function getCurrentMember(): Promise<Member | null> {
   }
 
   return member;
-}
+});
 
 /**
  * Ghi cookie thành viên hiện tại.

@@ -9,11 +9,7 @@ import { CollectionHeader } from "@/components/navigation/collection-header";
 import { CollectionToolbar } from "@/components/navigation/collection-toolbar";
 import { SearchInput, SearchProvider } from "@/components/shared/search";
 import { FlowerCardSkeletonGrid } from "@/components/shared/skeleton";
-import {
-  getActiveFlowerNames,
-  getArchivedFlowers,
-  getFlowers,
-} from "@/lib/flower";
+import { getArchivedFlowers, getFlowers } from "@/lib/flower";
 import { getActiveFlowerOwners } from "@/lib/flower-owner";
 import { getMembers } from "@/lib/member";
 
@@ -77,8 +73,10 @@ async function FlowersStatusContent({
 }
 
 async function ImportFlowerDialogWithNames() {
-  // Dùng cùng nguồn tên với server import để preview đánh dấu trùng chính xác.
-  const existingNames = await getActiveFlowerNames();
+  // Dùng lại getFlowers() (đã cache trong cùng request) thay vì query tên hoa
+  // riêng, vừa không lệch nguồn dữ liệu vừa giảm số query tới Prisma.
+  const flowers = await getFlowers();
+  const existingNames = flowers.map((flower) => flower.name);
 
   return <ImportFlowerDialog existingNames={existingNames} />;
 }
