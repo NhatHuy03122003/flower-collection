@@ -64,7 +64,11 @@ export async function toggleFlowerOwnerAction(flowerId: string) {
   }
 
   await toggleFlowerOwner(member.id, flower.id);
-  revalidateCollections();
+  revalidatePath("/");
+  revalidatePath("/flowers");
+  revalidatePath("/my-flowers");
+  revalidatePath("/members");
+  revalidatePath("/members/[id]", "page");
 }
 
 /**

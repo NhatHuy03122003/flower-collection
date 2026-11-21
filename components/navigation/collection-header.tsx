@@ -8,7 +8,7 @@ import { getMembers } from "@/lib/member";
 
 export function CollectionHeader() {
   return (
-    <header className="border-b border-rose-200/80 bg-[#fff8fa]">
+    <header className="sticky top-0 z-40 border-b border-rose-200/80 bg-[#fff8fa]">
       <div className="mx-auto flex min-h-14 w-full max-w-screen-2xl items-center justify-between gap-3 px-3 py-2 sm:px-5">
         <h1 className="flex items-center gap-2 text-base font-bold tracking-tight text-rose-950 sm:text-lg">
           <span aria-hidden="true" className="text-lg">
