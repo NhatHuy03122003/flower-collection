@@ -15,12 +15,13 @@ const colorBadgeColors: Record<string, string> = {
   cam: "bg-amber-100 text-amber-900",
   vàng: "bg-yellow-100 text-yellow-900",
   tím: "bg-violet-100 text-violet-800",
+  lá: "bg-green-100 text-green-800",
   xanh: "bg-sky-100 text-sky-800",
 };
 
 function getColorBadgeColor(color: string | null) {
   const colorKey = Object.keys(colorBadgeColors).find((key) =>
-    color?.toLocaleLowerCase("vi").includes(key),
+    color?.normalize("NFC").toLocaleLowerCase("vi").includes(key),
   );
 
   return colorKey ? colorBadgeColors[colorKey] : "bg-rose-100 text-rose-800";
