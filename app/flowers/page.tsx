@@ -73,8 +73,6 @@ async function FlowersStatusContent({
 }
 
 async function ImportFlowerDialogWithNames() {
-  // Dùng lại getFlowers() (đã cache trong cùng request) thay vì query tên hoa
-  // riêng, vừa không lệch nguồn dữ liệu vừa giảm số query tới Prisma.
   const flowers = await getFlowers();
   const existingNames = flowers.map((flower) => flower.name);
 

@@ -19,7 +19,7 @@ const colorBadgeColors: Record<string, string> = {
   xanh: "bg-sky-100 text-sky-800",
 };
 
-function getColorBadgeColor(color: string | null) {
+export function getColorBadgeColor(color: string | null) {
   const colorKey = Object.keys(colorBadgeColors).find((key) =>
     color?.normalize("NFC").toLocaleLowerCase("vi").includes(key),
   );

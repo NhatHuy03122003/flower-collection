@@ -1,9 +1,12 @@
+import { cn } from "cn";
+
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getDisplayImageUrl, type Flower } from "@/lib/flower";
 import type { FlowerOwnerListItem } from "@/lib/flower-owner";
 import type { Member } from "@/lib/member";
 
+import { getColorBadgeColor } from "./flower-card";
 import { DeactivateFlowerButton } from "./deactivate-flower-button";
 import { EditFlowerDialog } from "./edit-flower-dialog";
 import { FlowerOwnerList } from "./flower-owner-list";
@@ -52,8 +55,10 @@ export function FlowerManagementRow({
             />
             <div className="flex items-center justify-between gap-2">
               <Badge
-                variant="secondary"
-                className="rounded-md px-2 text-xs font-medium"
+                className={cn(
+                  "rounded-md px-2 text-xs font-medium",
+                  getColorBadgeColor(flower.color),
+                )}
               >
                 {flower.color?.trim() || "Chưa phân loại"}
               </Badge>
