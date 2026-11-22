@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { getDisplayImageUrl } from "@/lib/flower";
 import type { MemberOwnershipSummary } from "@/lib/flower-owner";
 import type { Member } from "@/lib/member";
 
@@ -23,7 +24,7 @@ export function MemberRow({
           {member.avatarUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={member.avatarUrl}
+              src={getDisplayImageUrl(member.avatarUrl)}
               alt={member.displayName}
               loading="lazy"
               className="size-full object-cover"

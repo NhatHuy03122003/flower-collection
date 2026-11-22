@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { getDisplayImageUrl } from "@/lib/flower";
 import type { MemberOwnershipSummary } from "@/lib/flower-owner";
 import type { Member } from "@/lib/member";
 
@@ -17,7 +18,7 @@ export function MemberOverview({
         {member.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={member.avatarUrl}
+            src={getDisplayImageUrl(member.avatarUrl)}
             alt={member.displayName}
             loading="lazy"
             className="size-full object-cover"

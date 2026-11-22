@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import type { MemberActionState } from "@/lib/member";
+import { normalizeImageUrl } from "@/lib/image-url";
 
 const INITIAL_STATE: MemberActionState = { status: "idle" };
 
@@ -75,9 +76,7 @@ function AddMemberForm({ onSuccess }: { onSuccess: () => void }) {
             aria-invalid={state.errors?.displayName ? true : undefined}
           />
           {state.errors?.displayName ? (
-            <p className="text-xs text-rose-700">
-              {state.errors.displayName}
-            </p>
+            <p className="text-xs text-rose-700">{state.errors.displayName}</p>
           ) : null}
         </div>
 
@@ -113,6 +112,10 @@ function AddMemberForm({ onSuccess }: { onSuccess: () => void }) {
             placeholder="https://..."
             autoComplete="off"
             aria-invalid={state.errors?.avatarUrl ? true : undefined}
+            onBlur={(event) => {
+              const normalizedUrl = normalizeImageUrl(event.target.value);
+              event.target.value = normalizedUrl;
+            }}
           />
           {state.errors?.avatarUrl ? (
             <p className="text-xs text-rose-700">{state.errors.avatarUrl}</p>
