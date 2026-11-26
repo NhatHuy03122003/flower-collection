@@ -2,9 +2,11 @@ import { Suspense } from "react";
 
 import { AuthLinks, UserMenu } from "@/components/auth/user-menu";
 import { MemberSelector } from "@/components/member/member-selector";
+import { NotificationBell } from "@/components/notification/notification-bell";
+import { getAccessibleMembers } from "@/lib/auth-guard";
 import { getCurrentMember } from "@/lib/current-member";
 import { getCurrentUser } from "@/lib/current-user";
-import { getMembers } from "@/lib/member";
+import { getMyNotifications } from "@/lib/notification";
 
 export function CollectionHeader() {
   return (
@@ -22,6 +24,9 @@ export function CollectionHeader() {
             <HeaderMemberSelector />
           </Suspense>
           <Suspense fallback={null}>
+            <HeaderNotifications />
+          </Suspense>
+          <Suspense fallback={null}>
             <HeaderUserArea />
           </Suspense>
         </div>
@@ -36,9 +41,32 @@ async function HeaderUserArea() {
   return user ? <UserMenu user={user} /> : <AuthLinks />;
 }
 
+async function HeaderNotifications() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return null;
+  }
+
+  const { notifications, unreadCount } = await getMyNotifications();
+
+  return (
+    <NotificationBell
+      initialNotifications={notifications}
+      initialUnreadCount={unreadCount}
+    />
+  );
+}
+
 async function HeaderMemberSelector() {
+  const user = await getCurrentUser();
+
+  if (!user) {
+    return null;
+  }
+
   const [members, currentMember] = await Promise.all([
-    getMembers(),
+    getAccessibleMembers(),
     getCurrentMember(),
   ]);
 

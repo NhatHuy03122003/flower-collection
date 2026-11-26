@@ -11,10 +11,12 @@ export function FlowerManagementList({
   flowers,
   ownersByFlower,
   members,
+  canManage = false,
 }: {
   flowers: Flower[];
   ownersByFlower: Map<string, FlowerOwnerListItem[]>;
   members: Member[];
+  canManage?: boolean;
 }) {
   if (flowers.length === 0) {
     return (
@@ -52,6 +54,7 @@ export function FlowerManagementList({
             flower={flower}
             owners={ownersByFlower.get(flower.id) ?? []}
             members={members}
+            canManage={canManage}
           />
         ),
       }))}

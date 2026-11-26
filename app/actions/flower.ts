@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { AuthError, requireAdmin } from "@/lib/auth-guard";
 import {
   createFlower,
   createFlowers,
@@ -20,6 +21,7 @@ import {
   parseFlowerImportContent,
 } from "@/lib/flower-import";
 import type { FlowerImportFormat } from "@/lib/flower-import";
+import { createNotificationSafely } from "@/lib/notification";
 
 function revalidateFlowerPaths() {
   revalidatePath("/flowers");
@@ -29,10 +31,27 @@ function revalidateFlowerPaths() {
   revalidatePath("/members", "layout");
 }
 
+async function authorizeAdminForForm(): Promise<FlowerActionState | null> {
+  try {
+    await requireAdmin();
+    return null;
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { status: "error", errors: { form: error.message } };
+    }
+    throw error;
+  }
+}
+
 export async function createFlowerAction(
   _prevState: FlowerActionState,
   formData: FormData,
 ): Promise<FlowerActionState> {
+  const authError = await authorizeAdminForForm();
+  if (authError) {
+    return authError;
+  }
+
   const { data, errors } = validateFlowerInput(formData);
 
   if (!data) {
@@ -56,6 +75,11 @@ export async function deactivateFlowerAction(
   _prevState: FlowerActionState,
   formData: FormData,
 ): Promise<FlowerActionState> {
+  const authError = await authorizeAdminForForm();
+  if (authError) {
+    return authError;
+  }
+
   const id = formData.get("id");
 
   if (typeof id !== "string" || !id.trim()) {
@@ -84,6 +108,11 @@ export async function restoreFlowerAction(
   _prevState: FlowerActionState,
   formData: FormData,
 ): Promise<FlowerActionState> {
+  const authError = await authorizeAdminForForm();
+  if (authError) {
+    return authError;
+  }
+
   const id = formData.get("id");
 
   if (typeof id !== "string" || !id.trim()) {
@@ -112,6 +141,11 @@ export async function updateFlowerAction(
   _prevState: FlowerActionState,
   formData: FormData,
 ): Promise<FlowerActionState> {
+  const authError = await authorizeAdminForForm();
+  if (authError) {
+    return authError;
+  }
+
   const id = formData.get("id");
 
   if (typeof id !== "string" || !id.trim()) {
@@ -162,6 +196,17 @@ export async function importFlowersAction(
   content: string,
   format: FlowerImportFormat,
 ): Promise<ImportFlowersResult> {
+  let adminUserId: string;
+  try {
+    const admin = await requireAdmin();
+    adminUserId = admin.id;
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { status: "error", message: error.message };
+    }
+    throw error;
+  }
+
   if (typeof content !== "string" || !content.trim()) {
     return { status: "error", message: "Nội dung file trống." };
   }
@@ -190,9 +235,25 @@ export async function importFlowersAction(
   await createFlowers(preview.importable);
   revalidateFlowerPaths();
 
+  const imported = preview.importable.length;
+  const skipped = preview.totalRows - imported;
+
+  await createNotificationSafely({
+    userId: adminUserId,
+    type: skipped > 0 ? "FLOWER_IMPORT_PARTIAL" : "FLOWER_IMPORT_COMPLETED",
+    title:
+      skipped > 0
+        ? "Import dữ liệu hoa hoàn tất một phần"
+        : "Import dữ liệu hoa hoàn tất",
+    message:
+      skipped > 0
+        ? `Import thành công ${imported} hoa, bỏ qua/lỗi ${skipped} dòng.`
+        : `Import thành công toàn bộ ${imported} hoa vào danh mục.`,
+  });
+
   return {
     status: "success",
-    imported: preview.importable.length,
-    skipped: preview.totalRows - preview.importable.length,
+    imported,
+    skipped,
   };
 }

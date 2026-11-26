@@ -1,3 +1,5 @@
+import { cn } from "cn";
+
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -11,9 +13,11 @@ import { EditMemberDialog } from "./edit-member-dialog";
 export function MemberRow({
   member,
   summary,
+  canManage = false,
 }: {
   member: Member;
   summary: MemberOwnershipSummary;
+  canManage?: boolean;
 }) {
   const initial = member.displayName.trim().charAt(0).toUpperCase() || "?";
 
@@ -63,7 +67,12 @@ export function MemberRow({
         </dl>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 border-t border-rose-100 p-3">
+      <div
+        className={cn(
+          "grid gap-2 border-t border-rose-100 p-3",
+          canManage ? "grid-cols-3" : "grid-cols-1",
+        )}
+      >
         <Button
           render={<Link href={`/members/${member.id}`} />}
           nativeButton={false}
@@ -73,12 +82,16 @@ export function MemberRow({
         >
           Chi tiết
         </Button>
-        <EditMemberDialog member={member} className="w-full" />
-        <DeactivateMemberButton
-          memberId={member.id}
-          displayName={member.displayName}
-          className="w-full"
-        />
+        {canManage ? (
+          <>
+            <EditMemberDialog member={member} className="w-full" />
+            <DeactivateMemberButton
+              memberId={member.id}
+              displayName={member.displayName}
+              className="w-full"
+            />
+          </>
+        ) : null}
       </div>
     </li>
   );

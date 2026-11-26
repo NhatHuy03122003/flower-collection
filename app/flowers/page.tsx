@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
 import { AddFlowerDialog } from "@/components/flower/add-flower-dialog";
 import { ArchivedFlowerList } from "@/components/flower/archived-flower-list";
@@ -9,9 +10,13 @@ import { CollectionHeader } from "@/components/navigation/collection-header";
 import { CollectionToolbar } from "@/components/navigation/collection-toolbar";
 import { SearchInput, SearchProvider } from "@/components/shared/search";
 import { FlowerCardSkeletonGrid } from "@/components/shared/skeleton";
+import {
+  AuthError,
+  getAccessibleMembers,
+  requireAdmin,
+} from "@/lib/auth-guard";
 import { getArchivedFlowers, getFlowers } from "@/lib/flower";
-import { getActiveFlowerOwners } from "@/lib/flower-owner";
-import { getMembers } from "@/lib/member";
+import { getAdminFlowerOwners } from "@/lib/flower-owner";
 
 export const metadata = {
   title: "Quản lý hoa — Hội ROSE Flower Collection",
@@ -38,12 +43,8 @@ export default function FlowersPage({
             <div className="flex flex-wrap items-center gap-3">
               <SearchInput placeholder="Tìm theo tên hoa..." />
               <Suspense fallback={null}>
-                <FlowerStatusSwitch />
+                <AdminFlowerControls />
               </Suspense>
-              <Suspense fallback={<ImportFlowerDialog existingNames={[]} />}>
-                <ImportFlowerDialogWithNames />
-              </Suspense>
-              <AddFlowerDialog />
             </div>
           </div>
 
@@ -56,12 +57,42 @@ export default function FlowersPage({
   );
 }
 
+async function requireFlowersAdmin() {
+  try {
+    return await requireAdmin();
+  } catch (error) {
+    if (error instanceof AuthError) {
+      if (error.code === "UNAUTHENTICATED") {
+        redirect("/login");
+      }
+      redirect("/");
+    }
+    throw error;
+  }
+}
+
+async function AdminFlowerControls() {
+  await requireFlowersAdmin();
+
+  return (
+    <>
+      <Suspense fallback={null}>
+        <FlowerStatusSwitch />
+      </Suspense>
+      <Suspense fallback={<ImportFlowerDialog existingNames={[]} />}>
+        <ImportFlowerDialogWithNames />
+      </Suspense>
+      <AddFlowerDialog />
+    </>
+  );
+}
+
 async function FlowersStatusContent({
   searchParams,
 }: {
   searchParams: Promise<{ status?: string | string[] }>;
 }) {
-  const params = await searchParams;
+  const [params] = await Promise.all([searchParams, requireFlowersAdmin()]);
   const showArchived = params.status === "all";
 
   return (
@@ -82,8 +113,8 @@ async function ImportFlowerDialogWithNames() {
 async function FlowersContent() {
   const [flowers, ownersByFlower, members] = await Promise.all([
     getFlowers(),
-    getActiveFlowerOwners(),
-    getMembers(),
+    getAdminFlowerOwners(),
+    getAccessibleMembers(),
   ]);
 
   return (
@@ -95,6 +126,7 @@ async function FlowersContent() {
         flowers={flowers}
         ownersByFlower={ownersByFlower}
         members={members}
+        canManage
       />
     </section>
   );

@@ -3,8 +3,22 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum NotificationType {
+  MEMBER_ASSIGNED
+  MEMBER_REVOKED
+  FLOWER_IMPORT_COMPLETED
+  FLOWER_IMPORT_PARTIAL
+  USER_PENDING_MEMBER_ASSIGNMENT
 }
 
 model Flower {
@@ -40,7 +54,8 @@ model Member {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  flowers FlowerOwner[]
+  flowers     FlowerOwner[]
+  userMembers UserMember[]
 
   @@index([displayName])
 }
@@ -50,7 +65,12 @@ model User {
   username     String   @unique
   passwordHash String
   displayName  String
+  role         Role     @default(USER)
   createdAt    DateTime @default(now())
+
+  members               UserMember[]
+  notifications         Notification[] @relation("NotificationRecipient")
+  targetedNotifications Notification[] @relation("NotificationTargetUser")
 
   @@index([username])
 }
@@ -69,4 +89,38 @@ model FlowerOwner {
 
   @@unique([flowerId, memberId])
   @@index([memberId])
+}
+
+model UserMember {
+  id        String   @id @default(cuid())
+  userId    String
+  memberId  String
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  member Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, memberId])
+  @@index([memberId])
+}
+
+model Notification {
+  id           String           @id @default(cuid())
+  userId       String
+  targetUserId String?
+  type         NotificationType
+  title        String
+  message      String
+  linkUrl      String?
+  isRead       Boolean          @default(false)
+  resolvedAt   DateTime?
+  createdAt    DateTime         @default(now())
+
+  user       User  @relation("NotificationRecipient", fields: [userId], references: [id], onDelete: Cascade)
+  targetUser User? @relation("NotificationTargetUser", fields: [targetUserId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+  @@index([userId, createdAt])
+  @@index([type, targetUserId, resolvedAt])
+  @@unique([userId, type, targetUserId])
 }

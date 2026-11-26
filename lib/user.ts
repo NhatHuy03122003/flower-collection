@@ -1,7 +1,11 @@
 import { randomBytes, scrypt, timingSafeEqual } from "node:crypto";
 import { promisify } from "node:util";
 
+import type { Role } from "@prisma/client";
+
 import { prisma } from "./prisma";
+
+export type { Role };
 
 const scryptAsync = promisify(scrypt);
 
@@ -14,6 +18,7 @@ export type User = {
   id: string;
   username: string;
   displayName: string;
+  role: Role;
   createdAt: Date;
 };
 
@@ -54,7 +59,13 @@ export async function getUserByUsername(username: string) {
 export async function getUserById(id: string): Promise<User | null> {
   return prisma.user.findUnique({
     where: { id },
-    select: { id: true, username: true, displayName: true, createdAt: true },
+    select: {
+      id: true,
+      username: true,
+      displayName: true,
+      role: true,
+      createdAt: true,
+    },
   });
 }
 
@@ -83,14 +94,21 @@ export async function createUser(data: {
   username: string;
   displayName: string;
   passwordHash: string;
-}) {
+}): Promise<User> {
   return prisma.user.create({
     data: {
       username: data.username.trim(),
       displayName: data.displayName.trim(),
       passwordHash: data.passwordHash,
+      role: "USER",
     },
-    select: { id: true, username: true, displayName: true, createdAt: true },
+    select: {
+      id: true,
+      username: true,
+      displayName: true,
+      role: true,
+      createdAt: true,
+    },
   });
 }
 

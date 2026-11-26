@@ -1,4 +1,7 @@
+import { BookOpen } from "lucide-react";
+
 import { LoginForm } from "@/components/auth/login-form";
+import { GuideModal } from "@/components/guide/guide-modal";
 
 export const metadata = {
   title: "Đăng nhập — Hội ROSE Flower Collection",
@@ -22,6 +25,30 @@ export default function LoginPage() {
 
         <LoginForm />
       </div>
+
+      <section
+        aria-labelledby="login-guide-heading"
+        className="mt-4 w-full max-w-sm rounded-2xl border border-rose-200/80 bg-[#fff8fa] p-4 shadow-sm"
+      >
+        <div className="flex items-start gap-2.5">
+          <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-xl bg-rose-100 text-rose-700">
+            <BookOpen aria-hidden="true" className="size-4" />
+          </span>
+          <div className="space-y-1.5">
+            <h2
+              id="login-guide-heading"
+              className="text-xs font-semibold text-rose-950"
+            >
+              Bạn chưa biết cách sử dụng ROSE?
+            </h2>
+            <p className="text-xs leading-relaxed text-rose-900/70">
+              Xem hướng dẫn từng bước để biết cách chọn thành viên, tìm hoa và
+              đánh dấu những bông hoa bạn yêu thích.
+            </p>
+            <GuideModal />
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

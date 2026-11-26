@@ -16,10 +16,12 @@ export function FlowerManagementRow({
   flower,
   owners,
   members,
+  canManage = false,
 }: {
   flower: Flower;
   owners: FlowerOwnerListItem[];
   members: Member[];
+  canManage?: boolean;
 }) {
   return (
     <li className="h-full">
@@ -48,11 +50,13 @@ export function FlowerManagementRow({
           <FlowerOwnerList ownerCount={owners.length} owners={owners} />
 
           <div className="mt-auto space-y-2">
-            <FlowerOwnerSelect
-              flowerId={flower.id}
-              owners={owners}
-              members={members}
-            />
+            {canManage ? (
+              <FlowerOwnerSelect
+                flowerId={flower.id}
+                owners={owners}
+                members={members}
+              />
+            ) : null}
             <div className="flex items-center justify-between gap-2">
               <Badge
                 className={cn(
@@ -62,13 +66,15 @@ export function FlowerManagementRow({
               >
                 {flower.color?.trim() || "Chưa phân loại"}
               </Badge>
-              <div className="flex items-center gap-1">
-                <EditFlowerDialog flower={flower} />
-                <DeactivateFlowerButton
-                  flowerId={flower.id}
-                  name={flower.name}
-                />
-              </div>
+              {canManage ? (
+                <div className="flex items-center gap-1">
+                  <EditFlowerDialog flower={flower} />
+                  <DeactivateFlowerButton
+                    flowerId={flower.id}
+                    name={flower.name}
+                  />
+                </div>
+              ) : null}
             </div>
           </div>
         </CardContent>

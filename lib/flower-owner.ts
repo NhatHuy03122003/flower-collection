@@ -127,34 +127,46 @@ export async function setFlowerOwner(
   });
 }
 
+async function queryFlowerOwners(
+  includeInactiveMembers: boolean,
+): Promise<Map<string, FlowerOwnerListItem[]>> {
+  const owners = await prisma.flowerOwner.findMany({
+    where: {
+      flower: { isActive: true },
+      ...(includeInactiveMembers ? {} : { member: { isActive: true } }),
+    },
+    orderBy: { ownedAt: "asc" },
+    select: {
+      flowerId: true,
+      memberId: true,
+      member: { select: { displayName: true } },
+    },
+  });
+
+  const ownersByFlower = new Map<string, FlowerOwnerListItem[]>();
+
+  for (const owner of owners) {
+    const list = ownersByFlower.get(owner.flowerId) ?? [];
+    list.push({ id: owner.memberId, displayName: owner.member.displayName });
+    ownersByFlower.set(owner.flowerId, list);
+  }
+
+  return ownersByFlower;
+}
+
 /**
- * Chủ sở hữu của tất cả hoa đang hoạt động, gom theo flowerId.
- * Dùng cho dropdown chọn chủ ở trang quản lý hoa.
+ * Chủ sở hữu của tất cả hoa đang hoạt động (chỉ Member active), gom theo flowerId.
+ * Dùng cho người xem thông thường trên trang danh sách hoa.
  * Bọc cache() để không query trùng trong cùng request.
  */
-export const getActiveFlowerOwners = cache(
-  async (): Promise<Map<string, FlowerOwnerListItem[]>> => {
-    const owners = await prisma.flowerOwner.findMany({
-      where: { flower: { isActive: true }, member: { isActive: true } },
-      orderBy: { ownedAt: "asc" },
-      select: {
-        flowerId: true,
-        memberId: true,
-        member: { select: { displayName: true } },
-      },
-    });
+export const getActiveFlowerOwners = cache(() => queryFlowerOwners(false));
 
-    const ownersByFlower = new Map<string, FlowerOwnerListItem[]>();
-
-    for (const owner of owners) {
-      const list = ownersByFlower.get(owner.flowerId) ?? [];
-      list.push({ id: owner.memberId, displayName: owner.member.displayName });
-      ownersByFlower.set(owner.flowerId, list);
-    }
-
-    return ownersByFlower;
-  },
-);
+/**
+ * Chủ sở hữu của tất cả hoa đang hoạt động (bao gồm cả Member active và inactive).
+ * Dùng cho giao diện quản trị của ADMIN.
+ * Bọc cache() để không query trùng trong cùng request.
+ */
+export const getAdminFlowerOwners = cache(() => queryFlowerOwners(true));
 
 /**
  * Gom hoa theo màu để hiển thị thành từng khu vực.

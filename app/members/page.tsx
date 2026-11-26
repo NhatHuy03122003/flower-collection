@@ -6,6 +6,7 @@ import { CollectionHeader } from "@/components/navigation/collection-header";
 import { CollectionToolbar } from "@/components/navigation/collection-toolbar";
 import { SearchInput, SearchProvider } from "@/components/shared/search";
 import { MemberCardSkeletonGrid } from "@/components/shared/skeleton";
+import { getCurrentUser } from "@/lib/current-user";
 import { getMemberOwnershipSummaries } from "@/lib/flower-owner";
 import { getMembers } from "@/lib/member";
 
@@ -29,7 +30,9 @@ export default function MembersPage() {
             </h2>
             <div className="flex flex-wrap items-center gap-3">
               <SearchInput placeholder="Tìm thành viên..." />
-              <AddMemberDialog />
+              <Suspense fallback={null}>
+                <AdminAddMemberButton />
+              </Suspense>
             </div>
           </div>
 
@@ -42,8 +45,19 @@ export default function MembersPage() {
   );
 }
 
+async function AdminAddMemberButton() {
+  const user = await getCurrentUser();
+
+  if (user?.role !== "ADMIN") {
+    return null;
+  }
+
+  return <AddMemberDialog />;
+}
+
 async function MembersContent() {
-  const members = await getMembers();
+  const [members, user] = await Promise.all([getMembers(), getCurrentUser()]);
+  const isAdmin = user?.role === "ADMIN";
   const summaries = await getMemberOwnershipSummaries(
     members.map((member) => member.id),
   );
@@ -53,7 +67,11 @@ async function MembersContent() {
       <p className="text-xs font-medium text-rose-800/65">
         {members.length} thành viên
       </p>
-      <MemberList members={members} summaries={summaries} />
+      <MemberList
+        members={members}
+        summaries={summaries}
+        canManage={isAdmin}
+      />
     </div>
   );
 }

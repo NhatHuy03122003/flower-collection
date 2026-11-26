@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { AuthError, requireAdmin } from "@/lib/auth-guard";
 import {
   createMember,
   deactivateMember,
@@ -12,10 +13,27 @@ import {
 } from "@/lib/member";
 import type { MemberActionState } from "@/lib/member";
 
+async function authorizeAdminForForm(): Promise<MemberActionState | null> {
+  try {
+    await requireAdmin();
+    return null;
+  } catch (error) {
+    if (error instanceof AuthError) {
+      return { status: "error", errors: { form: error.message } };
+    }
+    throw error;
+  }
+}
+
 export async function createMemberAction(
   _prevState: MemberActionState,
   formData: FormData,
 ): Promise<MemberActionState> {
+  const authError = await authorizeAdminForForm();
+  if (authError) {
+    return authError;
+  }
+
   const { data, errors } = validateMemberInput(formData);
 
   if (!data) {
@@ -39,6 +57,11 @@ export async function deactivateMemberAction(
   _prevState: MemberActionState,
   formData: FormData,
 ): Promise<MemberActionState> {
+  const authError = await authorizeAdminForForm();
+  if (authError) {
+    return authError;
+  }
+
   const id = formData.get("id");
 
   if (typeof id !== "string" || !id.trim()) {
@@ -59,6 +82,8 @@ export async function deactivateMemberAction(
 
   await deactivateMember(id);
   revalidatePath("/members");
+  revalidatePath("/");
+  revalidatePath("/my-flowers");
 
   return { status: "success" };
 }
@@ -67,6 +92,11 @@ export async function updateMemberAction(
   _prevState: MemberActionState,
   formData: FormData,
 ): Promise<MemberActionState> {
+  const authError = await authorizeAdminForForm();
+  if (authError) {
+    return authError;
+  }
+
   const id = formData.get("id");
 
   if (typeof id !== "string" || !id.trim()) {

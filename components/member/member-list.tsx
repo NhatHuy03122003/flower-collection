@@ -15,9 +15,11 @@ const EMPTY_SUMMARY: MemberOwnershipSummary = {
 export function MemberList({
   members,
   summaries,
+  canManage = false,
 }: {
   members: Member[];
   summaries: Map<string, MemberOwnershipSummary>;
+  canManage?: boolean;
 }) {
   if (members.length === 0) {
     return (
@@ -27,7 +29,9 @@ export function MemberList({
           Chưa có thành viên nào
         </h2>
         <p className="text-sm text-rose-900/65">
-          Thêm thành viên đầu tiên để bắt đầu quản lý bộ sưu tập.
+          {canManage
+            ? "Thêm thành viên đầu tiên để bắt đầu quản lý bộ sưu tập."
+            : "Hiện chưa có thành viên nào trong bộ sưu tập."}
         </p>
       </div>
     );
@@ -54,6 +58,7 @@ export function MemberList({
           <MemberRow
             member={member}
             summary={summaries.get(member.id) ?? EMPTY_SUMMARY}
+            canManage={canManage}
           />
         ),
       }))}

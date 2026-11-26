@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { clearCurrentMemberId } from "@/lib/current-member";
 import { clearUserSession, setUserSession } from "@/lib/current-user";
+import { notifyAdminsPendingMemberSafely } from "@/lib/notification";
 import {
   createUser,
   getUserByUsername,
@@ -34,11 +36,15 @@ export async function signupAction(
 
   const passwordHash = await hashPassword(data.password);
 
-  await createUser({
+  const createdUser = await createUser({
     username: data.username,
     displayName: data.displayName,
     passwordHash,
   });
+
+  if (createdUser.role === "USER") {
+    await notifyAdminsPendingMemberSafely(createdUser);
+  }
 
   redirect("/login?toast=signup-success");
 }
@@ -70,6 +76,7 @@ export async function loginAction(
 
 export async function logoutAction() {
   await clearUserSession();
+  await clearCurrentMemberId();
   revalidatePath("/", "layout");
 
   redirect("/login");

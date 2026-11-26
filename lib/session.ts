@@ -12,11 +12,20 @@ export const SESSION_COOKIE_OPTIONS = {
   httpOnly: true,
   sameSite: "lax",
   path: "/",
+  secure: process.env.NODE_ENV === "production",
   maxAge: SESSION_MAX_AGE_SECONDS,
 } as const;
 
 function getSecret() {
-  return process.env.SESSION_SECRET || "rose-flower-collection-dev-secret";
+  const secret = process.env.SESSION_SECRET;
+
+  if (process.env.NODE_ENV === "production" && !secret) {
+    throw new Error(
+      "SESSION_SECRET environment variable is required in production.",
+    );
+  }
+
+  return secret || "rose-flower-collection-dev-secret";
 }
 
 function sign(payload: string) {

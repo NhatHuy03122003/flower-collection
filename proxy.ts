@@ -3,8 +3,8 @@ import type { NextRequest } from "next/server";
 
 import { SESSION_COOKIE } from "@/lib/session";
 
-// Route yêu cầu đăng nhập
-const PROTECTED_PATHS = ["/", "/flowers", "/members", "/my-flowers"];
+// Route yêu cầu đăng nhập (kiểm tra sơ bộ, quyền thật luôn xác minh phía server)
+const PROTECTED_PATHS = ["/flowers", "/my-flowers", "/admin"];
 
 // Route dành cho người chưa đăng nhập
 const AUTH_PATHS = ["/login", "/signup"];

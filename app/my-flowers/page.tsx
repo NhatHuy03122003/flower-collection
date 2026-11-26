@@ -1,10 +1,16 @@
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 import { Flower2 } from "lucide-react";
 
 import { FlowerSection } from "@/components/flower/flower-section";
 import { CollectionHeader } from "@/components/navigation/collection-header";
 import { CollectionToolbar } from "@/components/navigation/collection-toolbar";
 import { FlowerCardSkeletonGrid } from "@/components/shared/skeleton";
+import {
+  AuthError,
+  getAccessibleMembers,
+  requireAuth,
+} from "@/lib/auth-guard";
 import { getCurrentMember } from "@/lib/current-member";
 import {
   getOwnedFlowerCollection,
@@ -37,9 +43,38 @@ export default function MyFlowersPage() {
 }
 
 async function MyFlowersContent() {
+  try {
+    await requireAuth();
+  } catch (error) {
+    if (error instanceof AuthError) {
+      if (error.code === "UNAUTHENTICATED") {
+        redirect("/login");
+      }
+      redirect("/");
+    }
+    throw error;
+  }
+
   const currentMember = await getCurrentMember();
 
   if (!currentMember) {
+    const accessibleMembers = await getAccessibleMembers();
+
+    if (accessibleMembers.length === 0) {
+      return (
+        <div className="mx-auto flex min-h-56 max-w-md flex-col items-center justify-center gap-2 px-5 py-12 text-center">
+          <Flower2 aria-hidden="true" className="size-8 text-rose-400" />
+          <h2 className="text-base font-semibold text-rose-950">
+            Chưa được cấp quyền thành viên
+          </h2>
+          <p className="text-sm text-rose-900/65">
+            Tài khoản của bạn chưa được gán thành viên nào. Vui lòng liên hệ
+            quản trị viên.
+          </p>
+        </div>
+      );
+    }
+
     return (
       <div className="mx-auto flex min-h-56 max-w-md flex-col items-center justify-center gap-2 px-5 py-12 text-center">
         <Flower2 aria-hidden="true" className="size-8 text-rose-400" />
