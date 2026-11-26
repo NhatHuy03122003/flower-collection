@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getDisplayImageUrl } from "@/lib/flower";
 import type { MemberOwnershipSummary } from "@/lib/flower-owner";
-import type { Member } from "@/lib/member";
+import type { MemberProfile } from "@/lib/member";
 
 import { DeactivateMemberButton } from "./deactivate-member-button";
 import { EditMemberDialog } from "./edit-member-dialog";
@@ -15,8 +15,8 @@ export function MemberRow({
   summary,
   canManage = false,
 }: {
-  member: Member;
-  summary: MemberOwnershipSummary;
+  member: MemberProfile;
+  summary?: MemberOwnershipSummary;
   canManage?: boolean;
 }) {
   const initial = member.displayName.trim().charAt(0).toUpperCase() || "?";
@@ -51,20 +51,22 @@ export function MemberRow({
           ) : null}
         </div>
 
-        <dl className="w-full space-y-1 rounded-lg bg-rose-50/70 px-3 py-2 text-sm">
-          <div className="flex items-center justify-between gap-2">
-            <dt className="text-muted-foreground">Sở hữu</dt>
-            <dd className="font-semibold text-slate-900">
-              {summary.ownedCount} hoa
-            </dd>
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <dt className="text-muted-foreground">Hoàn thành</dt>
-            <dd className="font-semibold text-slate-900">
-              {summary.completionPercentage}%
-            </dd>
-          </div>
-        </dl>
+        {summary ? (
+          <dl className="w-full space-y-1 rounded-lg bg-rose-50/70 px-3 py-2 text-sm">
+            <div className="flex items-center justify-between gap-2">
+              <dt className="text-muted-foreground">Sở hữu</dt>
+              <dd className="font-semibold text-slate-900">
+                {summary.ownedCount} hoa
+              </dd>
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <dt className="text-muted-foreground">Hoàn thành</dt>
+              <dd className="font-semibold text-slate-900">
+                {summary.completionPercentage}%
+              </dd>
+            </div>
+          </dl>
+        ) : null}
       </div>
 
       <div

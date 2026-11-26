@@ -17,6 +17,25 @@ export const getMembers = cache(async () =>
 
 export type Member = Awaited<ReturnType<typeof getMembers>>[number];
 
+export type MemberProfile = Pick<
+  Member,
+  "id" | "displayName" | "gameHandle" | "avatarUrl"
+>;
+
+// Danh sách công khai cho Guest: chỉ Member đang hoạt động và các trường hiển thị hồ sơ.
+export const getPublicMembers = cache(async (): Promise<MemberProfile[]> =>
+  prisma.member.findMany({
+    where: { isActive: true },
+    orderBy: { displayName: "asc" },
+    select: {
+      id: true,
+      displayName: true,
+      gameHandle: true,
+      avatarUrl: true,
+    },
+  }),
+);
+
 export type MemberInput = {
   displayName: string;
   gameHandle: string | null;

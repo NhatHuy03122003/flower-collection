@@ -8,7 +8,7 @@ import { SearchInput, SearchProvider } from "@/components/shared/search";
 import { MemberCardSkeletonGrid } from "@/components/shared/skeleton";
 import { getCurrentUser } from "@/lib/current-user";
 import { getMemberOwnershipSummaries } from "@/lib/flower-owner";
-import { getMembers } from "@/lib/member";
+import { getMembers, getPublicMembers } from "@/lib/member";
 
 export const metadata = {
   title: "Thành viên — Hội ROSE Flower Collection",
@@ -56,8 +56,23 @@ async function AdminAddMemberButton() {
 }
 
 async function MembersContent() {
-  const [members, user] = await Promise.all([getMembers(), getCurrentUser()]);
-  const isAdmin = user?.role === "ADMIN";
+  const user = await getCurrentUser();
+
+  if (!user) {
+    const publicMembers = await getPublicMembers();
+
+    return (
+      <div className="space-y-3">
+        <p className="text-xs font-medium text-rose-800/65">
+          {publicMembers.length} thành viên
+        </p>
+        <MemberList members={publicMembers} canManage={false} />
+      </div>
+    );
+  }
+
+  const members = await getMembers();
+  const isAdmin = user.role === "ADMIN";
   const summaries = await getMemberOwnershipSummaries(
     members.map((member) => member.id),
   );

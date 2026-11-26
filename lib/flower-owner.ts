@@ -82,6 +82,23 @@ export const getFlowerCollection = cache((memberId: string | null) =>
 );
 
 /**
+ * Danh sách hoa công khai cho Guest: không truy vấn owners, nên không lộ tên thành viên.
+ */
+export const getPublicFlowerCollection = cache(async () => {
+  const flowers = await prisma.flower.findMany({
+    where: { isActive: true },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return flowers.map((flower): FlowerCollectionItem => ({
+    flower,
+    ownerCount: 0,
+    owners: [],
+    isOwnedByCurrentMember: false,
+  }));
+});
+
+/**
  * Chỉ các hoa mà thành viên hiện tại đang sở hữu.
  */
 export const getOwnedFlowerCollection = cache((memberId: string) =>

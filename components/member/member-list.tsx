@@ -2,7 +2,7 @@ import { SearchX, Users } from "lucide-react";
 
 import { SearchableList } from "@/components/shared/searchable-list";
 import type { MemberOwnershipSummary } from "@/lib/flower-owner";
-import type { Member } from "@/lib/member";
+import type { MemberProfile } from "@/lib/member";
 
 import { MemberRow } from "./member-row";
 
@@ -17,8 +17,8 @@ export function MemberList({
   summaries,
   canManage = false,
 }: {
-  members: Member[];
-  summaries: Map<string, MemberOwnershipSummary>;
+  members: MemberProfile[];
+  summaries?: Map<string, MemberOwnershipSummary>;
   canManage?: boolean;
 }) {
   if (members.length === 0) {
@@ -57,7 +57,11 @@ export function MemberList({
         content: (
           <MemberRow
             member={member}
-            summary={summaries.get(member.id) ?? EMPTY_SUMMARY}
+            summary={
+              summaries
+                ? (summaries.get(member.id) ?? EMPTY_SUMMARY)
+                : undefined
+            }
             canManage={canManage}
           />
         ),

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { ArrowLeft, Flower2 } from "lucide-react";
 
 import { FlowerSection } from "@/components/flower/flower-section";
@@ -8,6 +8,7 @@ import { CollectionSummary } from "@/components/member/collection-summary";
 import { MemberOverview } from "@/components/member/member-overview";
 import { CollectionHeader } from "@/components/navigation/collection-header";
 import { CollectionToolbar } from "@/components/navigation/collection-toolbar";
+import { getCurrentUser } from "@/lib/current-user";
 import {
   getMemberOwnershipSummary,
   getOwnedFlowerCollection,
@@ -15,7 +16,17 @@ import {
 } from "@/lib/flower-owner";
 import { getMemberById } from "@/lib/member";
 
-export default function MemberDetailPage(props: PageProps<"/members/[id]">) {
+export default async function MemberDetailPage(
+  props: PageProps<"/members/[id]">,
+) {
+  const { id } = await props.params;
+  const user = await getCurrentUser();
+
+  // Guest không xem được chi tiết thành viên; kiểm tra trước khi stream nội dung.
+  if (!user) {
+    redirect("/login");
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-[#f6d8e1] font-sans text-slate-800">
       <CollectionHeader />
@@ -25,19 +36,24 @@ export default function MemberDetailPage(props: PageProps<"/members/[id]">) {
 
       <main className="mx-auto w-full max-w-screen-2xl flex-1 px-3 py-4 sm:px-5 sm:py-5">
         <Suspense fallback={<MemberDetailLoading />}>
-          {props.params.then(({ id }) => (
-            <MemberDashboard id={id} />
-          ))}
+          <MemberDashboard id={id} isAdmin={user.role === "ADMIN"} />
         </Suspense>
       </main>
     </div>
   );
 }
 
-async function MemberDashboard({ id }: { id: string }) {
+async function MemberDashboard({
+  id,
+  isAdmin,
+}: {
+  id: string;
+  isAdmin: boolean;
+}) {
   const member = await getMemberById(id);
 
-  if (!member) {
+  // Member đã ẩn chỉ ADMIN được xem; kiểm tra trước khi truy vấn dữ liệu riêng tư.
+  if (!member || (!member.isActive && !isAdmin)) {
     notFound();
   }
 

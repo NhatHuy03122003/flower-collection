@@ -8,7 +8,12 @@ import { SearchInput, SearchProvider } from "@/components/shared/search";
 import { EmptyState } from "@/components/shared/empty-state";
 import { FlowerCardSkeletonGrid } from "@/components/shared/skeleton";
 import { getCurrentMember } from "@/lib/current-member";
-import { getFlowerCollection, groupCollectionByColor } from "@/lib/flower-owner";
+import { getCurrentUser } from "@/lib/current-user";
+import {
+  getFlowerCollection,
+  getPublicFlowerCollection,
+  groupCollectionByColor,
+} from "@/lib/flower-owner";
 
 export default function Home() {
   return (
@@ -30,8 +35,12 @@ export default function Home() {
 }
 
 async function FlowerCollection() {
-  const currentMember = await getCurrentMember();
-  const items = await getFlowerCollection(currentMember?.id ?? null);
+  const user = await getCurrentUser();
+  const isGuest = user === null;
+  const currentMember = isGuest ? null : await getCurrentMember();
+  const items = isGuest
+    ? await getPublicFlowerCollection()
+    : await getFlowerCollection(currentMember?.id ?? null);
 
   if (items.length === 0) {
     return <EmptyState />;
@@ -61,6 +70,7 @@ async function FlowerCollection() {
                 owners={item.owners}
                 isOwnedByCurrentMember={item.isOwnedByCurrentMember}
                 hasCurrentMember={hasCurrentMember}
+                showOwners={!isGuest}
               />
             ),
           })),

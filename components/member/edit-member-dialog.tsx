@@ -16,7 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import type { Member, MemberActionState } from "@/lib/member";
+import type { MemberActionState, MemberProfile } from "@/lib/member";
 
 const INITIAL_STATE: MemberActionState = { status: "idle" };
 
@@ -24,7 +24,7 @@ export function EditMemberDialog({
   member,
   className,
 }: {
-  member: Member;
+  member: MemberProfile;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
@@ -64,7 +64,7 @@ function EditMemberForm({
   member,
   onSuccess,
 }: {
-  member: Member;
+  member: MemberProfile;
   onSuccess: () => void;
 }) {
   const [state, formAction, pending] = useActionState(

@@ -34,6 +34,7 @@ export function FlowerCard({
   isOwnedByCurrentMember,
   hasCurrentMember,
   readOnly = false,
+  showOwners = true,
 }: {
   flower: Flower;
   ownerCount: number;
@@ -41,6 +42,7 @@ export function FlowerCard({
   isOwnedByCurrentMember: boolean;
   hasCurrentMember: boolean;
   readOnly?: boolean;
+  showOwners?: boolean;
 }) {
   return (
     <Card className="h-full gap-0 rounded-lg border border-border bg-white p-0 shadow-sm ring-0 transition-shadow hover:shadow-md">
@@ -83,7 +85,9 @@ export function FlowerCard({
           />
         </div>
 
-        <FlowerOwnerList ownerCount={ownerCount} owners={owners} />
+        {showOwners ? (
+          <FlowerOwnerList ownerCount={ownerCount} owners={owners} />
+        ) : null}
       </CardContent>
     </Card>
   );
